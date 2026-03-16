@@ -20,12 +20,19 @@ class Interpreter implements Expr.Visitor<Object> {
 
 		switch (expr.operator.type) {
 			case MINUS:
+				checkNumberOperand(expr.operator, right);
 				return -(double)right;
 			case BANG:
+				checkNumberOperand(expr.operator, right);
 				return !isTruthy(right);
 		}
 
 		return null
+	}
+
+	private void checkNumberOperand(Token operator, Object operand) {
+		if (operand instanceof Double) return;
+		throw new RuntimeError(operator, "Operand must be number");
 	}
 
 	private boolean isTruthy(Object object) {
@@ -41,22 +48,31 @@ class Interpreter implements Expr.Visitor<Object> {
 
 		switch (expr.operator.type) {
 			case BANG_EQUAL:
+				checkNumberOperands(expr.operator, left, right);
 				return !isEqual(left, right);
 			case EQUAL_EQUAL:
+				checkNumberOperands(expr.operator, left, right);
 				return isEqual(left, right);
 			case GREATER:
+				checkNumberOperands(expr.operator, left, right);
 				return (double)left > (double)right;
 			case GREATER_EQUAL:
+				checkNumberOperands(expr.operator, left, right);
 				return (double)left >= (double)right;
 			case LESS:
+				checkNumberOperands(expr.operator, left, right);
 				return (double)left < (double)right;
 			case LESS_EQUAL:
+				checkNumberOperands(expr.operator, left, right);
 				return (double)left <= (double)right;
 			case MINUS:
+				checkNumberOperands(expr.operator, left, right);
 				return (double)left - (double)right;
 			case SLASH:
+				checkNumberOperands(expr.operator, left, right);
 				return (double)left / (double)right;
 			case STAR:
+				checkNumberOperands(expr.operator, left, right);
 				return (double)left * (double)right;
 			case PLUS:
 				if (left instanceof Double && right instanceof Double) {
@@ -65,11 +81,16 @@ class Interpreter implements Expr.Visitor<Object> {
 				if (left instanceof String && right instanceof String) {
 					return (String)left + (String)right;
 				}
-
-				break;
+				throw new RuntimeError(expr.operator, "RAH");
 		}
 
 		return null;
+	}
+
+
+	private void checkNumberOperands(Token operator, Object left, Object right) {
+		if (left instanceof Double && right instanceof Double) return;
+		throw new RuntimeError(operator, "number please");
 	}
 
 	private boolean isEqual(Object a, Object b) {
