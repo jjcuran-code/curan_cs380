@@ -5,6 +5,28 @@ class Interpreter implements Expr.Visitor<Object> {
 		return expr.accept(this);
 	}
 
+	void interpret(Expr expression) {
+		try {
+			Object value = evaluate(expression);
+			System.out.println(stringify(value));
+		} catch (RuntimeError error) {
+			Lox.runtimeError(error);
+		}
+	}
+
+	private String stringify(Object object) {
+		if (object == null) return "nil";
+
+		if (object instanceof Double) {
+			String text = object.toString();
+			if (text.endsWith(".0")) {
+				text = text.substring(0, text.length() - 2);
+			}
+			return text;
+		}
+		return object.toString();
+	}
+
 	@Override
 	public Object visitLiteralExpr(Expr.Literal expr) {
 		return expr.value;
@@ -27,7 +49,7 @@ class Interpreter implements Expr.Visitor<Object> {
 				return !isTruthy(right);
 		}
 
-		return null
+		return null;
 	}
 
 	private void checkNumberOperand(Token operator, Object operand) {
@@ -42,16 +64,14 @@ class Interpreter implements Expr.Visitor<Object> {
 	}
 
 	@Override
-	public Object visitBinaryExpr(Expr.Literal expr) {
-		Object left = evaluate(expr.right);
+	public Object visitBinaryExpr(Expr.Binary expr) {
+		Object left = evaluate(expr.left);
 		Object right = evaluate(expr.right);
 
 		switch (expr.operator.type) {
 			case BANG_EQUAL:
-				checkNumberOperands(expr.operator, left, right);
 				return !isEqual(left, right);
 			case EQUAL_EQUAL:
-				checkNumberOperands(expr.operator, left, right);
 				return isEqual(left, right);
 			case GREATER:
 				checkNumberOperands(expr.operator, left, right);
@@ -98,10 +118,5 @@ class Interpreter implements Expr.Visitor<Object> {
 		if (a == null) return false;
 
 		return a.equals(b);
-	}
-
-	@Override
-	public Object visitLiteralExpr(Expr.Literal expr) {
-		return expr.value;
 	}
 }
