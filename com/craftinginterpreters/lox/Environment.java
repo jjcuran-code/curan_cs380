@@ -8,19 +8,21 @@ class Environment {
 	private final Map<String, Object> values = new HashMap<>();
 
 	Environment() {
-    enclosing = null;
-    }
+		enclosing = null;
+	}
 
-  Environment(Environment enclosing) {
-    this.enclosing = enclosing;
-    }
+	Environment(Environment enclosing) {
+		this.enclosing = enclosing;
+	}
 
 	Object get(Token name) {
 		if (values.containsKey(name.lexeme)) {
 			return values.get(name.lexeme);
 		}
 
-		if (enclosing != null) return enclosing.get(name);
+		if (enclosing != null) {
+			return enclosing.get(name);
+		}
 
 		throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
 	}

@@ -9,6 +9,10 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 		return expr.accept(this);
 	}
 
+	private void execute(Stmt stmt) {
+		stmt.accept(this);
+	}
+
 	void executeBlock(List<Stmt> statements, Environment environment) {
 		Environment previous = this.environment;
 		try {
@@ -22,12 +26,9 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 		}
 	}
 
-	private void execute(Stmt stmt) {
-		stmt.accept(this);
-	}
 
 	@Override
-  	public Void visitBlockStmt(Stmt.Block stmt) {
+	public Void visitBlockStmt(Stmt.Block stmt) {
 		executeBlock(stmt.statements, new Environment(environment));
 		return null;
 	}
@@ -35,6 +36,16 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	@Override
 	public Void visitExpressionStmt(Stmt.Expression stmt) {
 		evaluate(stmt.expression);
+		return null;
+	}
+
+	@Override
+	public Void visitIfStmt(Stmt.If stmt) {
+		if (isTruthy(evaluate(stmt.condition))) {
+			execute(stmt.thenBranch);
+		} else if (stmt.elseBranch != null) {
+			execute(stmt.elseBranch);
+		}
 		return null;
 	}
 
@@ -91,6 +102,21 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	public Object visitLiteralExpr(Expr.Literal expr) {
 		return expr.value;
 	}
+
+	@Override
+	public Object visitLogicalExpr(Expr.Logical expr) {
+		Object left = evaluate(expr.left);
+
+		if (expr.operator.type == TokenType.OR) {
+			if (isTruthy(left)) return left;
+		} else {
+			if (!isTruthy(left)) return left;
+		}
+
+		return evaluate(expr.right);
+	}
+
+
 	@Override
 	public Object visitGroupingExpr(Expr.Grouping expr) {
 		return evaluate(expr.expression);
